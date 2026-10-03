@@ -1,0 +1,59 @@
+<!doctype html><html lang="ja"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1f3a"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="ディズニー攻略">
+<link rel="manifest" href="manifest.json"><title>東京ディズニーランド攻略チェックリスト</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f5f7fb;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif}
+header{position:sticky;top:0;z-index:10;background:#0b1f3a;color:#fff;padding:calc(12px + env(safe-area-inset-top)) 12px 12px}
+h1{font-size:19px;margin:0 0 6px}#summary{font-size:13px;opacity:.9}main{max-width:950px;margin:auto;padding:10px}
+.panel{background:white;border-radius:15px;padding:11px;margin-bottom:10px;box-shadow:0 2px 10px #0001}label{font-size:13px;font-weight:700;display:block;margin-bottom:5px}
+button,select{font:inherit;border:1px solid #d5dbea;background:white;border-radius:10px;padding:8px 10px;min-height:40px}
+button.active{background:#0b1f3a;color:white;border-color:#0b1f3a}button.reset{color:#a22;background:#fff5f5}
+.row,.tags{display:flex;gap:7px;flex-wrap:wrap}.small{font-size:12px;color:#667085;margin-top:6px}
+.tablewrap{overflow:auto;background:white;border-radius:15px}table{width:100%;min-width:720px;border-collapse:separate;border-spacing:0}
+th,td{padding:9px;border-bottom:1px solid #e8ebf2;text-align:left;vertical-align:middle}th{position:sticky;top:72px;background:#eef2f8;z-index:2;font-size:13px}
+td{font-size:14px}.check{width:22px;height:22px;accent-color:#0b1f3a}.area{font-size:12px;color:#596579;white-space:nowrap}.name{font-weight:700}
+.badge{display:inline-block;padding:4px 7px;margin:2px 3px 2px 0;border-radius:999px;background:#f0f3f8;font-size:12px;white-space:nowrap}
+.dpa{font-weight:700;white-space:nowrap}.none{font-weight:400;color:#98a2b3}
+@media(max-width:600px){h1{font-size:18px}button{min-height:42px}th{top:69px}}
+</style></head><body>
+<header><h1>🏰 東京ディズニーランド攻略チェックリスト</h1><div id="summary"></div></header>
+<main>
+<section class="panel"><div class="row"><div><label>DPA</label>
+<button data-g="dpa" data-v="all" class="active">すべて</button><button data-g="dpa" data-v="yes">DPAのみ</button><button data-g="dpa" data-v="no">DPAなし</button></div>
+<div><label>チェック</label><button data-g="check" data-v="all" class="active">すべて</button><button data-g="check" data-v="unchecked">未チェック</button><button data-g="check" data-v="checked">チェック済み</button></div></div></section>
+<section class="panel"><label>種類（複数選択は OR 条件）</label><div id="types" class="tags"></div><div class="small">例：🎢＋🚤 →「コースター または ボート」</div></section>
+<section class="panel"><label>並べ替え</label><div class="row"><select id="sort"><option value="area">エリア順</option><option value="name">アトラクション名順</option><option value="type">種類順</option><option value="dpa">DPA順</option><option value="checked">チェック済み優先</option></select><button id="reset" class="reset">チェックをすべてリセット</button></div></section>
+<section class="tablewrap"><table><thead><tr><th>乗りたい</th><th>エリア名</th><th>アトラクション名</th><th>種類</th><th>DPA</th></tr></thead><tbody id="body"></tbody></table></section>
+</main>
+<script>
+const data=[["ワールドバザール", "オムニバス", "🚂", 0], ["アドベンチャーランド", "カリブの海賊", "🚤", 0], ["アドベンチャーランド", "ジャングルクルーズ", "🚤", 0], ["アドベンチャーランド", "ウエスタンリバー鉄道", "🚂", 0], ["アドベンチャーランド", "魅惑のチキルーム", "🎭", 0], ["ウエスタンランド", "ビッグサンダー・マウンテン", "🎢", 1500], ["ウエスタンランド", "マークトウェイン号", "🚤", 0], ["ウエスタンランド", "トムソーヤ島いかだ", "🚤", 0], ["ウエスタンランド", "カントリーベア・シアター", "🎭", 0], ["ウエスタンランド", "ウエスタンランド・シューティングギャラリー", "🎯", 0], ["クリッターカントリー", "スプラッシュ・マウンテン", "🚤,🎢", 1500], ["クリッターカントリー", "ビーバーブラザーズのカヌー探険", "🚤,🎯", 0], ["ファンタジーランド", "美女と野獣“魔法のものがたり”", "🚂", 2500], ["ファンタジーランド", "プーさんのハニーハント", "🚂", 1500], ["ファンタジーランド", "ホーンテッドマンション", "🚂", 1000], ["ファンタジーランド", "イッツ・ア・スモールワールド", "🚤", 0], ["ファンタジーランド", "ピーターパン空の旅", "🚂,🚤", 0], ["ファンタジーランド", "白雪姫と七人のこびと", "🚂", 0], ["ファンタジーランド", "ピノキオの冒険旅行", "🚂", 0], ["ファンタジーランド", "シンデレラのフェアリーテイル・ホール", "🚶", 0], ["ファンタジーランド", "キャッスルカルーセル", "🔄", 0], ["ファンタジーランド", "ダンボ", "🔄", 0], ["ファンタジーランド", "アリスのティーパーティー", "🔄", 0], ["ファンタジーランド", "ミッキーのフィルハーマジック", "🎭", 0], ["トゥーンタウン", "ガジェットのゴーコースター", "🎢", 0], ["トゥーンタウン", "ロジャーラビットのカートゥーンスピン", "🚂,🔄", 0], ["トゥーンタウン", "ミッキーの家とミート・ミッキー", "🤝", 0], ["トゥーンタウン", "ミニーのスタイルスタジオ", "🤝", 0], ["トゥーンタウン", "ミニーの家", "🚶", 0], ["トゥーンタウン", "ドナルドのボート", "🚶,🚤", 0], ["トゥーンタウン", "グーフィーのペイント＆プレイハウス", "🎯", 0], ["トゥーンタウン", "チップとデールのツリーハウス", "🚶", 0], ["トゥモローランド", "ベイマックスのハッピーライド", "🔄", 1500], ["トゥモローランド", "モンスターズ・インク“ライド＆ゴーシーク！”", "🚂,🎯", 1000], ["トゥモローランド", "スター・ツアーズ：ザ・アドベンチャーズ・コンティニュー", "🎭", 0], ["トゥモローランド", "スティッチ・エンカウンター", "🎭", 0]], types=["🎢", "🚤", "🚂", "🚶", "🎭", "🎯", "🤝", "🔄"], tn={"🎢": "コースター", "🚤": "ボート", "🚂": "ライド", "🚶": "ウォークスルー", "🎭": "シアター", "🎯": "インタラクティブ", "🤝": "グリーティング", "🔄": "回転"};
+const key="tdl_check_v1"; let checked=JSON.parse(localStorage.getItem(key)||"[]");
+let f={dpa:"all",check:"all",types:[]}, sort="area";
+const order=["ワールドバザール","アドベンチャーランド","ウエスタンランド","クリッターカントリー","ファンタジーランド","トゥーンタウン","トゥモローランド"];
+const typeBox=document.getElementById("types");
+types.forEach(t=>{let b=document.createElement("button");b.textContent=t+" "+tn[t];b.onclick=()=>{f.types=f.types.includes(t)?f.types.filter(x=>x!==t):[...f.types,t];b.classList.toggle("active",f.types.includes(t));render()};typeBox.appendChild(b)});
+document.querySelectorAll("[data-g]").forEach(b=>b.onclick=()=>{f[b.dataset.g]=b.dataset.v;document.querySelectorAll('[data-g="'+b.dataset.g+'"]').forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
+document.getElementById("sort").onchange=e=>{sort=e.target.value;render()};
+document.getElementById("reset").onclick=()=>{if(confirm("チェックをすべてリセットしますか？")){checked=[];save();render()}};
+function save(){localStorage.setItem(key,JSON.stringify(checked))}
+function rows(){
+ let r=data.map((x,i)=>({x,i,done:checked.includes(i)}));
+ if(f.dpa==="yes")r=r.filter(a=>a.x[3]); if(f.dpa==="no")r=r.filter(a=>!a.x[3]);
+ if(f.check==="checked")r=r.filter(a=>a.done); if(f.check==="unchecked")r=r.filter(a=>!a.done);
+ if(f.types.length)r=r.filter(a=>f.types.some(t=>a.x[2].split(",").includes(t))); // OR
+ if(sort==="area")r.sort((a,b)=>order.indexOf(a.x[0])-order.indexOf(b.x[0])||a.i-b.i);
+ if(sort==="name")r.sort((a,b)=>a.x[1].localeCompare(b.x[1],"ja"));
+ if(sort==="type")r.sort((a,b)=>a.x[2].localeCompare(b.x[2]));
+ if(sort==="dpa")r.sort((a,b)=>(b.x[3]||0)-(a.x[3]||0));
+ if(sort==="checked")r.sort((a,b)=>Number(b.done)-Number(a.done)||a.i-b.i); return r}
+function render(){
+ let r=rows(),tb=document.getElementById("body");tb.innerHTML="";
+ r.forEach(a=>{let tr=document.createElement("tr"),x=a.x,td=document.createElement("td"),c=document.createElement("input");c.type="checkbox";c.className="check";c.checked=a.done;c.onchange=()=>{checked=c.checked?[...checked,a.i]:checked.filter(i=>i!==a.i);save();render()};td.appendChild(c);tr.appendChild(td);
+ [["area",x[0]],["name",x[1]]].forEach(q=>{let d=document.createElement("td");d.className=q[0];d.textContent=q[1];tr.appendChild(d)});
+ let t=document.createElement("td");x[2].split(",").forEach(v=>{let s=document.createElement("span");s.className="badge";s.textContent=v+" "+tn[v];t.appendChild(s)});tr.appendChild(t);
+ let d=document.createElement("td");d.className=x[3]?"dpa":"dpa none";d.textContent=x[3]?x[3].toLocaleString()+"円":"—";tr.appendChild(d);tb.appendChild(tr)})
+ document.getElementById("summary").textContent="チェック済み "+checked.length+" / "+data.length+" ・ 表示 "+r.length+"件"}
+render();
+</script></body></html>
